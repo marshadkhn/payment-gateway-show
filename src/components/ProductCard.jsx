@@ -2,30 +2,35 @@
 import { addToCart } from "../utils/cart";
 
 export default function ProductCard({ product }) {
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
+    // Stop the event from bubbling up to any parent link elements
+    e.stopPropagation();
+    e.preventDefault();
     addToCart(product);
-    alert(`${product.name} added to cart!`);
+    alert(`${product.name} has been added to your cart!`);
   };
 
   return (
-    <div className="border rounded-lg bg-white shadow-sm hover:shadow-md transition p-4 flex flex-col items-center">
-      <img
-        src={product.image}
-        alt={product.name}
-        className="h-40 w-40 object-contain mb-4"
-      />
-      <h3 className="text-lg font-semibold text-gray-900 mb-1 text-center">
-        {product.name}
-      </h3>
-      <p className="text-blue-800 font-bold mb-4 text-center">
-        ₹{product.price}
-      </p>
-      <button
-        onClick={handleAddToCart}
-        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition"
-      >
-        Add to Cart
-      </button>
+    <div className="group relative bg-secondary rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col">
+      <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-center object-cover group-hover:opacity-85 transition-opacity duration-300"
+        />
+      </div>
+      <div className="p-4 flex flex-col flex-grow">
+        <h3 className="text-lg font-semibold text-highlight">{product.name}</h3>
+        <p className="mt-1 text-sm text-gray-400">₹{product.price}</p>
+        <div className="mt-auto pt-4">
+          <button
+            onClick={handleAddToCart}
+            className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors duration-200"
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

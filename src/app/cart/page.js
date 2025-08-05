@@ -40,74 +40,109 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <main className="max-w-3xl mx-auto p-6 text-center">
-        <h2 className="text-2xl font-semibold mb-4">Your Cart is Empty</h2>
-        <Link href="/" className="text-blue-600 hover:underline">
-          Go Back to Shopping
-        </Link>
-      </main>
+      <div className="text-center py-16">
+        <h1 className="text-3xl font-bold text-highlight">
+          Your Cart is Empty
+        </h1>
+        <p className="mt-4 text-gray-400">
+          Looks like you haven't added anything to your cart yet.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/"
+            className="inline-block bg-brand text-white px-6 py-3 rounded-lg hover:bg-opacity-80 transition-colors duration-200"
+          >
+            Start Shopping
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-semibold mb-8">Your Cart</h1>
-
-      <div className="space-y-6">
-        {cart.map(({ id, name, price, quantity, image }) => (
-          <div key={id} className="flex items-center gap-6 border-b pb-4">
-            <img
-              src={image}
-              alt={name}
-              className="h-24 w-24 object-contain rounded-md"
-            />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold">{name}</h3>
-              <p className="text-blue-700 font-bold">₹{price}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor={`qty-${id}`} className="sr-only">
-                Quantity
-              </label>
-              <input
-                type="number"
-                id={`qty-${id}`}
-                min={1}
-                value={quantity}
-                onChange={(e) => handleQuantityChange(id, e.target.value)}
-                className="w-16 border rounded p-1 text-center"
+    <div className="bg-secondary shadow-md rounded-lg p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-highlight mb-6">
+        Your Shopping Cart
+      </h1>
+      <ul role="list" className="divide-y divide-accent">
+        {cart.map((product) => (
+          <li key={product.id} className="flex flex-col sm:flex-row py-6">
+            <div className="h-24 w-24 sm:h-32 sm:w-32 flex-shrink-0 self-center overflow-hidden rounded-md border border-accent">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-cover object-center"
               />
             </div>
-            <button
-              onClick={() => handleRemove(id)}
-              className="text-red-600 hover:underline font-semibold"
-            >
-              Remove
-            </button>
-          </div>
+            <div className="ml-0 sm:ml-4 mt-4 sm:mt-0 flex flex-1 flex-col">
+              <div>
+                <div className="flex justify-between text-base font-medium text-highlight">
+                  <h3>{product.name}</h3>
+                  <p className="ml-4">₹{product.price * product.quantity}</p>
+                </div>
+              </div>
+              <div className="flex flex-1 items-end justify-between text-sm mt-4">
+                <div className="flex items-center">
+                  <label
+                    htmlFor={`qty-${product.id}`}
+                    className="mr-2 text-gray-400"
+                  >
+                    Qty:
+                  </label>
+                  <input
+                    type="number"
+                    id={`qty-${product.id}`}
+                    min="1"
+                    value={product.quantity}
+                    onChange={(e) =>
+                      handleQuantityChange(product.id, e.target.value)
+                    }
+                    className="w-16 rounded border bg-primary text-highlight text-center"
+                  />
+                </div>
+                <div className="flex">
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(product.id)}
+                    className="font-medium text-brand hover:text-opacity-80"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </li>
         ))}
-      </div>
-
-      <div className="mt-8 flex justify-between items-center">
-        <button
-          onClick={handleClearCart}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-        >
-          Clear Cart
-        </button>
-        <div className="text-xl font-semibold">
-          Total: ₹{totalPrice.toFixed(2)}
+      </ul>
+      <div className="border-t border-accent pt-6 mt-6">
+        <div className="flex justify-between text-lg font-medium text-highlight">
+          <p>Subtotal</p>
+          <p>₹{totalPrice.toFixed(2)}</p>
+        </div>
+        <p className="mt-1 text-sm text-gray-400">
+          Shipping and taxes calculated at checkout.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/checkout"
+            className="flex items-center justify-center rounded-md border border-transparent bg-brand px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-opacity-80"
+          >
+            Proceed to Checkout
+          </Link>
+        </div>
+        <div className="mt-6 flex justify-center text-center text-sm text-gray-400">
+          <p>
+            or{" "}
+            <button
+              type="button"
+              onClick={handleClearCart}
+              className="font-medium text-brand hover:text-opacity-80"
+            >
+              Clear Cart
+            </button>
+          </p>
         </div>
       </div>
-
-      <div className="mt-8 text-right">
-        <Link
-          href="/checkout"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-        >
-          Proceed to Checkout
-        </Link>
-      </div>
-    </main>
+    </div>
   );
 }

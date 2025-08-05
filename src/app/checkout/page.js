@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Script from "next/script";
+import Link from "next/link";
 import { getCart, clearCart } from "../../utils/cart";
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     const storedCart = getCart();
@@ -26,13 +29,21 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Create Razorpay order on server
       const response = await fetch("/api/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: totalAmount }),
       });
-      const { order } = await response.json();
+
+      const responseBody = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${responseBody.error}`);
+        setLoading(false);
+        return;
+      }
+
+      const { order } = responseBody;
 
       if (!order) {
         alert("Error creating order, please try again.");
@@ -48,18 +59,17 @@ export default function CheckoutPage() {
         name: "Minimal Store",
         description: "Order Payment",
         handler: function (res) {
-          alert(`Payment successful! Payment ID: ${res.razorpay_payment_id}`);
+          setPaymentSuccess(true);
           clearCart();
           setCart([]);
           setLoading(false);
-          // You can redirect or show success UI here
         },
         prefill: {
           email: "",
           contact: "",
         },
         theme: {
-          color: "#3399cc",
+          color: "#FF5A5F",
         },
       };
 
@@ -71,46 +81,83 @@ export default function CheckoutPage() {
     }
   };
 
+  if (paymentSuccess) {
+    return (
+      <div className="text-center py-16">
+        <h1 className="text-3xl font-bold text-green-500">
+          Payment Successful!
+        </h1>
+        <p className="mt-4 text-gray-400">Your order has been placed.</p>
+        <div className="mt-6">
+          <Link
+            href="/"
+            className="inline-block bg-brand text-white px-6 py-3 rounded-lg hover:bg-opacity-80 transition-colors duration-200"
+          >
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (cart.length === 0) {
     return (
-      <main className="max-w-3xl mx-auto p-6 text-center">
-        <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
-        <a href="/" className="text-blue-600 hover:underline">
-          Continue Shopping
-        </a>
-      </main>
+      <div className="text-center py-16">
+        <h1 className="text-3xl font-bold text-highlight">
+          Your Cart is Empty
+        </h1>
+        <div className="mt-6">
+          <Link
+            href="/"
+            className="inline-block bg-brand text-white px-6 py-3 rounded-lg hover:bg-opacity-80 transition-colors duration-200"
+          >
+            Start Shopping
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-semibold mb-6">Checkout</h1>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Order Summary</h2>
-        <ul className="divide-y divide-gray-300">
+    <>
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+      />
+      <div className="bg-secondary shadow-md rounded-lg p-6">
+        <h1 className="text-3xl font-bold text-highlight mb-6">
+          Order Summary
+        </h1>
+        <ul role="list" className="divide-y divide-accent">
           {cart.map((item) => (
-            <li key={item.id} className="flex justify-between py-2">
-              <span>
+            <li key={item.id} className="flex justify-between py-4">
+              <span className="text-gray-300">
                 {item.name} x {item.quantity}
               </span>
-              <span className="font-semibold">
+              <span className="font-semibold text-highlight">
                 ₹{item.price * item.quantity}
               </span>
             </li>
           ))}
         </ul>
+        <div className="border-t border-accent pt-4 mt-4">
+          <div className="flex justify-between text-xl font-bold text-highlight">
+            <p>Total</p>
+            <p>₹{totalAmount.toFixed(2)}</p>
+          </div>
+        </div>
+        <div className="mt-8">
+          <button
+            onClick={handlePayment}
+            disabled={loading}
+            className="w-full bg-brand text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 hover:bg-opacity-80 disabled:opacity-50"
+          >
+            {loading
+              ? "Processing..."
+              : `Pay ₹${totalAmount.toFixed(2)} with Razorpay`}
+          </button>
+        </div>
       </div>
-      <div className="flex justify-between items-center font-bold text-lg mb-8">
-        <span>Total</span>
-        <span>₹{totalAmount}</span>
-      </div>
-      <button
-        onClick={handlePayment}
-        disabled={loading}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded transition disabled:opacity-50"
-      >
-        {loading ? "Processing..." : "Pay with Razorpay"}
-      </button>
-    </main>
+    </>
   );
 }
