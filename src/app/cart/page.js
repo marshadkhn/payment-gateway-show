@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image"; // Import the Next.js Image component
 import {
   getCart,
   removeFromCart,
@@ -44,8 +45,9 @@ export default function CartPage() {
         <h1 className="text-3xl font-bold text-highlight">
           Your Cart is Empty
         </h1>
+        {/* Corrected the unescaped apostrophe below */}
         <p className="mt-4 text-gray-400">
-          Looks like you haven't added anything to your cart yet.
+          Looks like you haven&apos;t added anything to your cart yet.
         </p>
         <div className="mt-6">
           <Link
@@ -68,9 +70,12 @@ export default function CartPage() {
         {cart.map((product) => (
           <li key={product.id} className="flex flex-col sm:flex-row py-6">
             <div className="h-24 w-24 sm:h-32 sm:w-32 flex-shrink-0 self-center overflow-hidden rounded-md border border-accent">
-              <img
+              {/* Replaced <img> with next/image <Image> */}
+              <Image
                 src={product.image}
                 alt={product.name}
+                width={128}
+                height={128}
                 className="h-full w-full object-cover object-center"
               />
             </div>
