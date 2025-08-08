@@ -1,134 +1,166 @@
+// src/components/Navbar.js
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getCart } from "../utils/cart";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
+  const [user, setUser] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const updateCount = () => {
       const cart = getCart();
-      const totalQuantity = cart.reduce((acc, item) => acc + item.quantity, 0);
-      setCartCount(totalQuantity);
+      const total = cart.reduce((a, i) => a + (Number(i.quantity) || 0), 0);
+      setCartCount(total);
     };
-
     updateCount();
-
-    // Listen for storage changes to update cart count across tabs
+    window.addEventListener("cart-updated", updateCount);
     window.addEventListener("storage", updateCount);
-    return () => window.removeEventListener("storage", updateCount);
+
+    // fetch user
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data.user || null);
+      })
+      .catch(() => {});
+
+    return () => {
+      window.removeEventListener("cart-updated", updateCount);
+      window.removeEventListener("storage", updateCount);
+    };
   }, []);
 
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/");
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-secondary shadow-lg">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <Link
               href="/"
-              className="text-2xl font-bold text-highlight hover:text-brand transition-colors duration-200"
+              className="text-2xl font-bold text-gray-900 hover:text-sky-600"
             >
               Minimal Store
             </Link>
           </div>
 
-          {/* Desktop Menu */}
-          <nav className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link
-                href="/"
-                className="text-gray-300 hover:bg-accent hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Home
-              </Link>
-              <Link
-                href="/cart"
-                className="relative text-gray-300 hover:bg-accent hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-              >
-                Cart
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-            </div>
+          <nav className="hidden md:flex items-center gap-4">
+            <Link href="/" className="text-gray-700 px-3 py-2 rounded">
+              Home
+            </Link>
+            <Link href="/cart" className="relative px-3 py-2 rounded">
+              Cart
+              {cartCount > 0 && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/orders"
+                  className="px-3 py-2 rounded text-gray-700"
+                >
+                  My Orders
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 bg-red-500 text-white rounded"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="px-3 py-2 rounded text-gray-700">
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-3 py-2 bg-sky-600 text-white rounded"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </nav>
 
-          {/* Mobile Menu Button */}
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="bg-accent inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
+              className="p-2 rounded bg-gray-100"
             >
-              <span className="sr-only">Open main menu</span>
-              {!isOpen ? (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              )}
+              Menu
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu, show/hide based on menu state. */}
       {isOpen && (
-        <div className="md:hidden" id="mobile-menu">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="px-2 py-3 space-y-1">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className="text-gray-300 hover:bg-accent hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+              className="block px-3 py-2"
             >
               Home
             </Link>
             <Link
               href="/cart"
               onClick={() => setIsOpen(false)}
-              className="relative text-gray-300 hover:bg-accent hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+              className="block px-3 py-2"
             >
               Cart
-              {cartCount > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                  {cartCount}
-                </span>
-              )}
             </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/orders"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-2"
+                >
+                  My Orders
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
+                  className="w-full text-left px-3 py-2"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-2"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-2"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

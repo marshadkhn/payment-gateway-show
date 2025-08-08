@@ -1,3 +1,4 @@
+// src/data/products.js
 export const PRODUCTS = [
   {
     id: "1",
