@@ -1,8 +1,28 @@
-// components/CheckoutButton.js
 "use client";
 
 export default function CheckoutButton({ amount }) {
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (document.getElementById("razorpay-script")) {
+        return resolve(true); // already loaded
+      }
+      const script = document.createElement("script");
+      script.id = "razorpay-script";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayment = async () => {
+    const scriptLoaded = await loadRazorpayScript();
+
+    if (!scriptLoaded) {
+      alert("Failed to load Razorpay SDK. Please try again.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/razorpay", {
         method: "POST",
@@ -48,7 +68,7 @@ export default function CheckoutButton({ amount }) {
       onClick={handlePayment}
       className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
     >
-      Pay Now (Test Mode)
+      Pay Now
     </button>
   );
 }
