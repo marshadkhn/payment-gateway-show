@@ -1,17 +1,39 @@
+// src/app/api/razorpay/route.js
 import Razorpay from "razorpay";
 
 export async function POST(req) {
-  const { amount } = await req.json();
+  try {
+    const { amount } = await req.json();
 
-  const instance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
+    if (!amount || amount <= 0) {
+      return new Response(JSON.stringify({ error: "Invalid amount" }), {
+        status: 400,
+      });
+    }
 
-  const order = await instance.orders.create({
-    amount: amount * 100,
-    currency: "INR",
-  });
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return new Response(
+        JSON.stringify({ error: "Missing Razorpay environment variables" }),
+        { status: 500 }
+      );
+    }
 
-  return Response.json({ order });
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // Amount in paise
+      currency: "INR",
+      payment_capture: 1,
+    });
+
+    return new Response(JSON.stringify({ order }), { status: 200 });
+  } catch (err) {
+    console.error("Razorpay API Error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+    });
+  }
 }

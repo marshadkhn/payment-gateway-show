@@ -1,42 +1,54 @@
+// components/CheckoutButton.js
 "use client";
-import Script from "next/script";
 
 export default function CheckoutButton({ amount }) {
   const handlePayment = async () => {
-    const res = await fetch("/api/razorpay", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    });
-    const { order } = await res.json();
+    try {
+      const res = await fetch("/api/razorpay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
 
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      order_id: order.id,
-      name: "Minimal Store",
-      handler: function (response) {
-        window.location.href = "/success";
-      },
-      theme: { color: "#3399cc" },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      const data = await res.json();
+
+      if (!data.order) {
+        alert(data.error || "Failed to create order");
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: "My Store",
+        description: "Test Transaction",
+        order_id: data.order.id,
+        handler: function (response) {
+          alert(
+            "Payment successful! Payment ID: " + response.razorpay_payment_id
+          );
+          window.location.href = "/success";
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Something went wrong during payment.");
+    }
   };
 
   return (
-    <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="afterInteractive"
-      />
-      <button
-        onClick={handlePayment}
-        className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition"
-      >
-        Pay Now
-      </button>
-    </>
+    <button
+      onClick={handlePayment}
+      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+    >
+      Pay Now (Test Mode)
+    </button>
   );
 }
