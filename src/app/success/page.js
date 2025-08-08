@@ -6,7 +6,7 @@ export default function SuccessPage() {
     <div className="text-center py-16">
       <h1 className="text-3xl font-bold text-green-600">Payment Received</h1>
       <p className="mt-4 text-gray-600">
-        Thanks for your purchase! We'll email your receipt shortly.
+        Thanks for your purchase! We&apos;ll email your receipt shortly.
       </p>
       <div className="mt-6">
         <Link
